@@ -7,3 +7,4 @@ pygmentsCodeFences = true
 enableRobotsTXT = true
 disqusShortname = 'clement89'
 googleAnalytics = 'G-1WNJ6RVDVS'
+show_reading_time = true
