@@ -1,6 +1,7 @@
 ---
 title: "Docker Bridge Networks and iptables"
 date: 2023-01-03T11:15:45+05:30
+description: "How DNS resolution works, Network isolation is provided and exposing a container service to outside world works in Docker bridge networks with iptables"
 draft: false
 ---
 
