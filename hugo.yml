@@ -1,0 +1,40 @@
+baseURL: 'https://web.loopback.in/'
+theme: 'PaperMod'
+paginate: 5
+languageCode: 'en-us'
+title: Clem
+enableRobotsTXT: true
+enableEmoji: true
+pygmentsUseClasses: true
+disqusShortname: 'clement89'
+languages:
+  en:
+    menu:
+      main:
+        - name: About
+          url: about
+          weight: 5
+params:
+  env: production
+  author: Clement Thomas
+  # author: ["Me", "You"] # multiple authors
+  defaultTheme: auto # dark, light
+  ShowReadingTime: true
+  ShowShareButtons: true
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowWordCount: true
+  ShowRssButtonInSectionTermList: true
+  UseHugoToc: true
+  comments: true
+  homeInfoParams:
+    Title: "Home"
+    Content: >
+      Hello 👋 Welcome
+
+  socialIcons:
+    - name: twitter
+      url: "https://twitter.com/meClemThom"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/clement89"
