@@ -4,4 +4,6 @@
 
 `git submodule update --init --recursive`
 
+* generate site 
 
+`hugo -d docs`
