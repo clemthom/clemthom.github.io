@@ -1,1 +1,5 @@
-{{ template "_internal/disqus.html" . }}
+{{with .Params.disableDisqus }}
+	<div></div>
+{{ else }}
+	{{ template "_internal/disqus.html" . }}
+{{end}}
