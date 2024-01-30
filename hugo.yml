@@ -7,13 +7,23 @@ enableRobotsTXT: true
 enableEmoji: true
 pygmentsUseClasses: true
 disqusShortname: 'clement89'
+pluralizeListTitles: false
 languages:
   en:
     menu:
       main:
+        - name: Home
+          pageRef: /
+          weight: 5
+        - name: Tech
+          url: tech
+          weight: 10
+        - name: Personal Finance
+          url: personal-finance
+          weight: 15
         - name: About
           url: about
-          weight: 5
+          weight: 20
 params:
   env: production
   author: Clement Thomas

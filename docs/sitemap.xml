@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://web.loopback.in/posts/ubuntu-repository/</loc>
+    <loc>https://web.loopback.in/tech/ubuntu-repository/</loc>
     <lastmod>2023-09-05T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/</loc>
     <lastmod>2023-09-23T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://web.loopback.in/posts/personal-finance/employee-pension-scheme/</loc>
+    <loc>https://web.loopback.in/personal-finance/employee-pension-scheme/</loc>
     <lastmod>2023-09-23T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/eps/</loc>
     <lastmod>2023-09-23T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://web.loopback.in/posts/</loc>
+    <loc>https://web.loopback.in/personal-finance/</loc>
     <lastmod>2023-09-23T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/retirement/</loc>
@@ -24,6 +24,9 @@
     <lastmod>2023-09-23T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/linux/</loc>
+    <lastmod>2023-09-05T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://web.loopback.in/tech/</loc>
     <lastmod>2023-09-05T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/ubuntu/</loc>

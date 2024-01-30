@@ -9,10 +9,10 @@
     <lastBuildDate>Tue, 05 Sep 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://web.loopback.in/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How Ubuntu repository works</title>
-      <link>https://web.loopback.in/posts/ubuntu-repository/</link>
+      <link>https://web.loopback.in/tech/ubuntu-repository/</link>
       <pubDate>Tue, 05 Sep 2023 00:00:00 +0000</pubDate>
       
-      <guid>https://web.loopback.in/posts/ubuntu-repository/</guid>
+      <guid>https://web.loopback.in/tech/ubuntu-repository/</guid>
       <description>Understanding how ubuntu apt repositories work</description>
     </item>
     
