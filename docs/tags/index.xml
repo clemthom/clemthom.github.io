@@ -6,8 +6,36 @@
     <description>Recent content in Tags on Clem</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 23 Sep 2023 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 22 Dec 2023 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://web.loopback.in/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>etrade</title>
+      <link>https://web.loopback.in/tags/etrade/</link>
+      <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/etrade/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>nostro</title>
+      <link>https://web.loopback.in/tags/nostro/</link>
+      <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/nostro/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>rsu</title>
+      <link>https://web.loopback.in/tags/rsu/</link>
+      <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/rsu/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>wire</title>
+      <link>https://web.loopback.in/tags/wire/</link>
+      <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/wire/</guid>
+      <description></description>
+    </item>
     <item>
       <title>eps</title>
       <link>https://web.loopback.in/tags/eps/</link>
@@ -34,6 +62,20 @@
       <link>https://web.loopback.in/tags/ubuntu/</link>
       <pubDate>Tue, 05 Sep 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/ubuntu/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>docker</title>
+      <link>https://web.loopback.in/tags/docker/</link>
+      <pubDate>Tue, 10 Jan 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/docker/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>iptables</title>
+      <link>https://web.loopback.in/tags/iptables/</link>
+      <pubDate>Tue, 10 Jan 2023 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/iptables/</guid>
       <description></description>
     </item>
   </channel>
