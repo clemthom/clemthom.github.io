@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>tax on Clem</title>
-    <link>https://web.loopback.in/tags/tax/</link>
-    <description>Recent content in tax on Clem</description>
+    <title>ppf on Clem</title>
+    <link>https://web.loopback.in/tags/ppf/</link>
+    <description>Recent content in ppf on Clem</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sat, 03 Feb 2024 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://web.loopback.in/tags/tax/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://web.loopback.in/tags/ppf/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>PPF - Public Provident Fund account</title>
       <link>https://web.loopback.in/personal-finance/ppf/</link>
       <pubDate>Sat, 03 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/personal-finance/ppf/</guid>
       <description>information about ppf account, tax benefits,withdrawal, closure of account etc.</description>
-    </item>
-    <item>
-      <title>National Pension Scheme</title>
-      <link>https://web.loopback.in/personal-finance/nps/</link>
-      <pubDate>Tue, 30 Jan 2024 00:00:00 +0000</pubDate>
-      <guid>https://web.loopback.in/personal-finance/nps/</guid>
-      <description>NPS - National Pension Scheme, types of nps accounts, tax benefits,with drawal, investment options, annuity etc.</description>
     </item>
   </channel>
 </rss>

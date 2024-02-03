@@ -6,7 +6,7 @@
     <description>Recent content on Clem</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 30 Jan 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 03 Feb 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://web.loopback.in/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How Ubuntu repository works</title>
@@ -14,6 +14,13 @@
       <pubDate>Tue, 05 Sep 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tech/ubuntu-repository/</guid>
       <description>Understanding how ubuntu apt repositories work</description>
+    </item>
+    <item>
+      <title>PPF - Public Provident Fund account</title>
+      <link>https://web.loopback.in/personal-finance/ppf/</link>
+      <pubDate>Sat, 03 Feb 2024 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/personal-finance/ppf/</guid>
+      <description>information about ppf account, tax benefits,withdrawal, closure of account etc.</description>
     </item>
     <item>
       <title>National Pension Scheme</title>
