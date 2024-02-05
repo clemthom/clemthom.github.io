@@ -224,7 +224,29 @@ repo-root/
         │   └── binary-amd64
         └── obsolete
             └── binary-amd64
-</code></pre><p>Lets us use <a href="https://fpm.readthedocs.io/en/latest/packages/deb.html">fpm</a> to create two deb packages from zip files. Easy way to create debs 🙂 Lets create a deb of terraform version <code>0.1.0</code> and <code>1.5.6</code>.  and move the debs inside the <code>binary-amd64</code> directory.</p>
+</code></pre><p>Lets us use <a
+
+  
+  
+    href = "https://fpm.readthedocs.io/en/latest/packages/deb.html"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    fpm
+  </span>
+
+</a>
+ to create two deb packages from zip files. Easy way to create debs 🙂 Lets create a deb of terraform version <code>0.1.0</code> and <code>1.5.6</code>.  and move the debs inside the <code>binary-amd64</code> directory.</p>
 <pre tabindex="0"><code>wget https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
 fpm -s zip -t deb --prefix /usr/bin -n terraform -v 1.5.6 terraform_1.5.6_linux_amd64.zip
 
@@ -391,8 +413,52 @@ The following NEW packages will be installed:
 </code></pre><p>Tada it worked.</p>
 <h3 id="references">References<a hidden class="anchor" aria-hidden="true" href="#references">#</a></h3>
 <ul>
-<li><a href="https://wiki.debian.org/DebianRepository/Format">https://wiki.debian.org/DebianRepository/Format</a></li>
-<li><a href="https://help.ubuntu.com/community/CreateAuthenticatedRepository">https://help.ubuntu.com/community/CreateAuthenticatedRepository</a></li>
+<li><a
+
+  
+  
+    href = "https://wiki.debian.org/DebianRepository/Format"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    https://wiki.debian.org/DebianRepository/Format
+  </span>
+
+</a>
+</li>
+<li><a
+
+  
+  
+    href = "https://help.ubuntu.com/community/CreateAuthenticatedRepository"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    https://help.ubuntu.com/community/CreateAuthenticatedRepository
+  </span>
+
+</a>
+</li>
 </ul>
 
 
