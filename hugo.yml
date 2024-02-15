@@ -25,6 +25,9 @@ languages:
           url: about
           weight: 20
 params:
+  mainSections:
+    - tech
+    - personal-finance
   env: production
   author: Clement Thomas
   # author: ["Me", "You"] # multiple authors

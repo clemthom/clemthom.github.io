@@ -13,9 +13,9 @@ Hi, I am Clement (may not be a familiar name, it's a dictionary word though, mea
 
 I listen to podcasts during workouts and whenever am free and the following are my regular podcasts
 
-* [why not mint money](https://www.livemint.com/podcast/why-not-mint-money-1402)
+* [Why not mint money](https://www.livemint.com/podcast/why-not-mint-money-1402)
 * [The school of greatness](https://lewishowes.com/sogpodcast/)
 * [Quote of the day show](https://seancroxton.com/quoteoftheday/)
 * [Feel better live more](https://drchatterjee.com/blog/category/podcast/)
 
-Some topics of my interest are Time management, Personal development, Mindfulness, Fitness and workouts, Personal finance and investing. I can talk/discuss about any of these topics for hours :)
+Some topics of my interest are anything SRE stuff, Time management, Personal development, Mindfulness, Fitness, workouts, Personal finance and investing.
