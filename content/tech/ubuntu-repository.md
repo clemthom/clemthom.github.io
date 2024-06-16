@@ -2,7 +2,6 @@
 title: "How Ubuntu repository works"
 summary: Understanding how ubuntu apt repositories work
 date: 2023-09-05
-weight: 1
 tags: ["ubuntu","linux"]
 author: "Clement Thomas"
 ---
