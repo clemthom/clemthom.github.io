@@ -2,25 +2,28 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://web.loopback.in/personal-finance/advance-tax/</loc>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://web.loopback.in/</loc>
-    <lastmod>2024-06-18T00:00:00+00:00</lastmod>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/india/</loc>
-    <lastmod>2024-06-18T00:00:00+00:00</lastmod>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/personal-finance/</loc>
-    <lastmod>2024-06-18T00:00:00+00:00</lastmod>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://web.loopback.in/tags/</loc>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://web.loopback.in/tags/tax/</loc>
+    <lastmod>2024-07-08T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/riets/</loc>
     <lastmod>2024-06-18T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/personal-finance/riets-taxation/</loc>
-    <lastmod>2024-06-18T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://web.loopback.in/tags/</loc>
-    <lastmod>2024-06-18T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://web.loopback.in/tags/tax/</loc>
     <lastmod>2024-06-18T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://web.loopback.in/tags/exotel/</loc>
