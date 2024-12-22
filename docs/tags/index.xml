@@ -1,92 +1,106 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Tags on Clem</title>
     <link>https://web.loopback.in/tags/</link>
     <description>Recent content in Tags on Clem</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo -- 0.140.0</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 09 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 22 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://web.loopback.in/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>land</title>
+      <title>Git</title>
+      <link>https://web.loopback.in/tags/git/</link>
+      <pubDate>Sun, 22 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/git/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Submodule</title>
+      <link>https://web.loopback.in/tags/submodule/</link>
+      <pubDate>Sun, 22 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tags/submodule/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Land</title>
       <link>https://web.loopback.in/tags/land/</link>
       <pubDate>Mon, 09 Sep 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/land/</guid>
       <description></description>
     </item>
     <item>
-      <title>india</title>
+      <title>India</title>
       <link>https://web.loopback.in/tags/india/</link>
       <pubDate>Mon, 08 Jul 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/india/</guid>
       <description></description>
     </item>
     <item>
-      <title>tax</title>
+      <title>Tax</title>
       <link>https://web.loopback.in/tags/tax/</link>
       <pubDate>Mon, 08 Jul 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/tax/</guid>
       <description></description>
     </item>
     <item>
-      <title>riets</title>
+      <title>Riets</title>
       <link>https://web.loopback.in/tags/riets/</link>
       <pubDate>Tue, 18 Jun 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/riets/</guid>
       <description></description>
     </item>
     <item>
-      <title>exotel</title>
+      <title>Exotel</title>
       <link>https://web.loopback.in/tags/exotel/</link>
       <pubDate>Fri, 14 Jun 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/exotel/</guid>
       <description></description>
     </item>
     <item>
-      <title>grafana</title>
+      <title>Grafana</title>
       <link>https://web.loopback.in/tags/grafana/</link>
       <pubDate>Fri, 14 Jun 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/grafana/</guid>
       <description></description>
     </item>
     <item>
-      <title>oncall</title>
+      <title>Oncall</title>
       <link>https://web.loopback.in/tags/oncall/</link>
       <pubDate>Fri, 14 Jun 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/oncall/</guid>
       <description></description>
     </item>
     <item>
-      <title>availability</title>
+      <title>Availability</title>
       <link>https://web.loopback.in/tags/availability/</link>
       <pubDate>Wed, 14 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/availability/</guid>
       <description></description>
     </item>
     <item>
-      <title>sla</title>
+      <title>Sla</title>
       <link>https://web.loopback.in/tags/sla/</link>
       <pubDate>Wed, 14 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/sla/</guid>
       <description></description>
     </item>
     <item>
-      <title>sli</title>
+      <title>Sli</title>
       <link>https://web.loopback.in/tags/sli/</link>
       <pubDate>Wed, 14 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/sli/</guid>
       <description></description>
     </item>
     <item>
-      <title>slo</title>
+      <title>Slo</title>
       <link>https://web.loopback.in/tags/slo/</link>
       <pubDate>Wed, 14 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/slo/</guid>
       <description></description>
     </item>
     <item>
-      <title>sre</title>
+      <title>Sre</title>
       <link>https://web.loopback.in/tags/sre/</link>
       <pubDate>Wed, 14 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/sre/</guid>
@@ -100,91 +114,91 @@
       <description></description>
     </item>
     <item>
-      <title>ppf</title>
+      <title>Ppf</title>
       <link>https://web.loopback.in/tags/ppf/</link>
       <pubDate>Sat, 03 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/ppf/</guid>
       <description></description>
     </item>
     <item>
-      <title>retirement</title>
+      <title>Retirement</title>
       <link>https://web.loopback.in/tags/retirement/</link>
       <pubDate>Sat, 03 Feb 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/retirement/</guid>
       <description></description>
     </item>
     <item>
-      <title>investments</title>
+      <title>Investments</title>
       <link>https://web.loopback.in/tags/investments/</link>
       <pubDate>Tue, 30 Jan 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/investments/</guid>
       <description></description>
     </item>
     <item>
-      <title>nps</title>
+      <title>Nps</title>
       <link>https://web.loopback.in/tags/nps/</link>
       <pubDate>Tue, 30 Jan 2024 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/nps/</guid>
       <description></description>
     </item>
     <item>
-      <title>etrade</title>
+      <title>Etrade</title>
       <link>https://web.loopback.in/tags/etrade/</link>
       <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/etrade/</guid>
       <description></description>
     </item>
     <item>
-      <title>nostro</title>
+      <title>Nostro</title>
       <link>https://web.loopback.in/tags/nostro/</link>
       <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/nostro/</guid>
       <description></description>
     </item>
     <item>
-      <title>rsu</title>
+      <title>Rsu</title>
       <link>https://web.loopback.in/tags/rsu/</link>
       <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/rsu/</guid>
       <description></description>
     </item>
     <item>
-      <title>wire</title>
+      <title>Wire</title>
       <link>https://web.loopback.in/tags/wire/</link>
       <pubDate>Fri, 22 Dec 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/wire/</guid>
       <description></description>
     </item>
     <item>
-      <title>eps</title>
+      <title>Eps</title>
       <link>https://web.loopback.in/tags/eps/</link>
       <pubDate>Sat, 23 Sep 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/eps/</guid>
       <description></description>
     </item>
     <item>
-      <title>linux</title>
+      <title>Linux</title>
       <link>https://web.loopback.in/tags/linux/</link>
       <pubDate>Tue, 05 Sep 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/linux/</guid>
       <description></description>
     </item>
     <item>
-      <title>ubuntu</title>
+      <title>Ubuntu</title>
       <link>https://web.loopback.in/tags/ubuntu/</link>
       <pubDate>Tue, 05 Sep 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/ubuntu/</guid>
       <description></description>
     </item>
     <item>
-      <title>docker</title>
+      <title>Docker</title>
       <link>https://web.loopback.in/tags/docker/</link>
       <pubDate>Tue, 10 Jan 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/docker/</guid>
       <description></description>
     </item>
     <item>
-      <title>iptables</title>
+      <title>Iptables</title>
       <link>https://web.loopback.in/tags/iptables/</link>
       <pubDate>Tue, 10 Jan 2023 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/tags/iptables/</guid>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Docker Bridge Networks and iptables | Clem</title>
+<meta name="keywords" content="docker, iptables">
+<meta name="description" content="How DNS resolution works, Network isolation is provided and exposing a container service to outside world works in Docker bridge networks with iptables">
+<meta name="author" content="Clement Thomas">
+<link rel="canonical" href="http://localhost:1313/tech/docker-bridge-network-iptables/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css" integrity="sha256-1vzSCk&#43;4bvpN&#43;sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tech/docker-bridge-network-iptables/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><script data-goatcounter="https://clemthom.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<meta property="og:url" content="http://localhost:1313/tech/docker-bridge-network-iptables/">
+  <meta property="og:site_name" content="Clem">
+  <meta property="og:title" content="Docker Bridge Networks and iptables">
+  <meta property="og:description" content="How DNS resolution works, Network isolation is provided and exposing a container service to outside world works in Docker bridge networks with iptables">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="tech">
+    <meta property="article:published_time" content="2023-01-10T00:00:00+00:00">
+    <meta property="article:modified_time" content="2023-01-10T00:00:00+00:00">
+    <meta property="article:tag" content="Docker">
+    <meta property="article:tag" content="Iptables">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Docker Bridge Networks and iptables">
+<meta name="twitter:description" content="How DNS resolution works, Network isolation is provided and exposing a container service to outside world works in Docker bridge networks with iptables">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Tech",
+      "item": "http://localhost:1313/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Docker Bridge Networks and iptables",
+      "item": "http://localhost:1313/tech/docker-bridge-network-iptables/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Docker Bridge Networks and iptables",
+  "name": "Docker Bridge Networks and iptables",
+  "description": "How DNS resolution works, Network isolation is provided and exposing a container service to outside world works in Docker bridge networks with iptables",
+  "keywords": [
+    "docker", "iptables"
+  ],
+  "articleBody": "Docker provides support for multiple network drivers. The default network driver being bridge network. Docker creates docker0 bridge and connects all the docker containers created in the host to it, unless we specify a different network with –network option.\nDocker’s bridge network documentation recommends user-defined bridge over using the default docker created bridge, some of the advantages of user-defined bridges are:\nuser-defined bridges provide automatic dns resolution. Containers can resolve each other by using the name or alias. In default docker bridge, we should use –link option to achieve this functionality, which is deprecated already.\nuser-defined bridges provide better isolation since only the containers connected to the same bridge network can communicate with each other. Docker adds iptables rules to prevent communication between bridges.\nDocker’s bridge network documentation provides few more advantages of using user-defined bridges. But in this article,we will see\nhow dns resolution happens and works for resolving containers and other dns names. how is network isolation provided? how are we able to access the service(s) running in a container,by exposing it on a port. Demo setup The below tests are done on ubuntu 20.04 vm running Docker engine version 20.10.17\nLet us create a user-defined bridge network called demo-net and create an nginx container named web and alphine container named cli, both attached to demo-net. Our linux vm has an ethernet connection eth0 with ip 10.44.54.64 and the dns server configured in /etc/resolv.conf is 10.40.50.60\ndocker network create --driver bridge demo-net docker run -d --network demo-net -p 0.0.0.0:8080:80 --name web nginx docker run -dit --network demo-net --name cli alpine ash When inspecting the demo-net bridge network, we can see both web and cli containers attached to it. Also to access our web container from outside,we are using -p 0.0.0.0:8080:80 so anyone can reach the web container by connecting to port 8080 on the vm.\ndocker network create --driver bridge demo-net docker network inspect demo-net \"Containers\": { \"303c085ffb99ab2d429a4f0b58138ba4f9a2560f133343c769b5593a1192c50c\": { \"Name\": \"cli\", \"EndpointID\": \"afad3f78d70a3c571d88dfed716564297b3903d6726e92dd5a2087519f1f5d0f\", \"MacAddress\": \"02:42:ac:12:00:03\", \"IPv4Address\": \"172.18.0.3/16\", \"IPv6Address\": \"\" }, \"aea6a91131135c9f0de56686ea5fa465524f13d6e325415858ba653786166a93\": { \"Name\": \"web\", \"EndpointID\": \"4efde27f5d0529776ec9c20515b2bb00dddd0f0c4d0f3ac739b89dca6efcc755\", \"MacAddress\": \"02:42:ac:12:00:02\", \"IPv4Address\": \"172.18.0.2/16\", \"IPv6Address\": \"\" } DNS resolution From the cli container, lets try to ping web and google.com\ndocker container attach cli / # ping -c 3 web PING web (172.18.0.2): 56 data bytes 64 bytes from 172.18.0.2: seq=0 ttl=64 time=0.215 ms 64 bytes from 172.18.0.2: seq=1 ttl=64 time=0.110 ms 64 bytes from 172.18.0.2: seq=2 ttl=64 time=0.160 ms --- web ping statistics --- 3 packets transmitted, 3 packets received, 0% packet loss round-trip min/avg/max = 0.110/0.161/0.215 ms / # ping -c 3 google.com PING google.com (142.250.194.142): 56 data bytes 64 bytes from 142.250.194.142: seq=0 ttl=115 time=3.610 ms 64 bytes from 142.250.194.142: seq=1 ttl=115 time=3.749 ms 64 bytes from 142.250.194.142: seq=2 ttl=115 time=3.804 ms --- google.com ping statistics --- 3 packets transmitted, 3 packets received, 0% packet loss round-trip min/avg/max = 3.610/3.721/3.804 ms while in another terminal running a tcpdump to inspect dns traffic.\nsudo tcpdump -i any -nn udp and port 53 [sudo] password for user: tcpdump: verbose output suppressed, use -v or -vv for full protocol decode listening on any, link-type LINUX_SLL (Linux cooked v1), capture size 262144 bytes 08:45:43.502942 IP 172.18.0.3.51782 \u003e 10.40.50.60.53: 9599+ A? google.com. (28) 08:45:43.502942 IP 172.18.0.3.51782 \u003e 10.40.50.60.53: 9599+ A? google.com. (28) 08:45:43.502985 IP 172.18.0.3.42132 \u003e 10.40.50.60.53: 9912+ AAAA? google.com. (28) 08:45:43.503012 IP 10.44.54.64.51782 \u003e 10.40.50.60.53: 9599+ A? google.com. (28) 08:45:43.502985 IP 172.18.0.3.42132 \u003e 10.40.50.60.53: 9912+ AAAA? google.com. (28) 08:45:43.503039 IP 10.44.54.64.42132 \u003e 10.40.50.60.53: 9912+ AAAA? google.com. (28) 08:45:43.503288 IP 10.40.50.60.53 \u003e 10.44.54.64.51782: 9599 1/0/0 A 142.250.194.142 (44) 08:45:43.503301 IP 10.40.50.60.53 \u003e 172.18.0.3.51782: 9599 1/0/0 A 142.250.194.142 (44) 08:45:43.503308 IP 10.40.50.60.53 \u003e 172.18.0.3.51782: 9599 1/0/0 A 142.250.194.142 (44) 08:45:43.503328 IP 10.40.50.60.53 \u003e 10.44.54.64.42132: 9912 0/0/0 (28) 08:45:43.503332 IP 10.40.50.60.53 \u003e 172.18.0.3.42132: 9912 0/0/0 (28) Here there is no dns request, sent for web but our container still resolved the correct ip for the web container. But for google.com we can see tcpdump showing the actual dns query being made by the cli container.\nThe DNS resolution for container names or aliases is handled by the Docker’s embedded DNS server and so no actual dns call is made and hence there is no output in terminal running tcpdump. More on this in here Though the cli container makes the dns request, we can see the same request is sent out through our eth0 interface (also bridge network is not an actual network visible outside our linux host).\nNetwork isolation The dns resolution done above, network isolation and also the exposing of the container service in a port on the host vm are all achieved through iptables rules.\nLet us inspect the iptables rules in the vm. Though iptables -nL gives the rules, the output of iptables-save is bit more easier to understand and so we will use the latter.\nroot@linux-vm:~# iptables-save # Generated by iptables-save v1.8.4 on Wed Jan 4 09:07:50 2023 *filter :INPUT ACCEPT [1023555:889414063] :FORWARD DROP [0:0] :OUTPUT ACCEPT [506329:266904587] :DOCKER - [0:0] :DOCKER-ISOLATION-STAGE-1 - [0:0] :DOCKER-ISOLATION-STAGE-2 - [0:0] :DOCKER-USER - [0:0] -A FORWARD -j DOCKER-USER -A FORWARD -j DOCKER-ISOLATION-STAGE-1 -A FORWARD -o br-44a58be29ddf -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -A FORWARD -o br-44a58be29ddf -j DOCKER -A FORWARD -i br-44a58be29ddf ! -o br-44a58be29ddf -j ACCEPT -A FORWARD -i br-44a58be29ddf -o br-44a58be29ddf -j ACCEPT -A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -A FORWARD -o docker0 -j DOCKER -A FORWARD -i docker0 ! -o docker0 -j ACCEPT -A FORWARD -i docker0 -o docker0 -j ACCEPT -A DOCKER -d 172.18.0.2/32 ! -i br-44a58be29ddf -o br-44a58be29ddf -p tcp -m tcp --dport 80 -j ACCEPT -A DOCKER-ISOLATION-STAGE-1 -i br-44a58be29ddf ! -o br-44a58be29ddf -j DOCKER-ISOLATION-STAGE-2 -A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2 -A DOCKER-ISOLATION-STAGE-1 -j RETURN -A DOCKER-ISOLATION-STAGE-2 -o br-44a58be29ddf -j DROP -A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP -A DOCKER-ISOLATION-STAGE-2 -j RETURN -A DOCKER-USER -j RETURN COMMIT *nat :PREROUTING ACCEPT [451:184498] :INPUT ACCEPT [13:1070] :OUTPUT ACCEPT [6508:559391] :POSTROUTING ACCEPT [6510:559535] :DOCKER - [0:0] -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER -A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER -A POSTROUTING -s 172.18.0.0/16 ! -o br-44a58be29ddf -j MASQUERADE -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE -A POSTROUTING -s 172.18.0.2/32 -d 172.18.0.2/32 -p tcp -m tcp --dport 80 -j MASQUERADE -A DOCKER -i br-44a58be29ddf -j RETURN -A DOCKER -i docker0 -j RETURN -A DOCKER ! -i br-44a58be29ddf -p tcp -m tcp --dport 8080 -j DNAT --to-destination 172.18.0.2:80 COMMIT Thats a lot of rules, Lets take few rules at a time to understand. But before a quick summary about iptables.\niptables is the command used to configure the linux kernel’s packet filtering subsystem.\niptables comes with three built-in tables filter,mangle and nat. and if we dont specify any table in the command, filter is the default. Each table has one or more built-in chains(INPUT,OUTPUT,PREROUTING,POSTROUTING,FORWARD) which in turn has rules which determine what to do with a packet. ie. ACCEPT, DROP etc. In addition to pre-configured chains, we can also create custom chains and use it. The following are the tables and their built-in chains. Also each chain has the default policy, ie. what to do when none of the rules match it. *filter :INPUT ACCEPT [1023555:889414063] :FORWARD DROP [0:0] :OUTPUT ACCEPT [506329:266904587] :DOCKER - [0:0] :DOCKER-ISOLATION-STAGE-1 - [0:0] :DOCKER-ISOLATION-STAGE-2 - [0:0] :DOCKER-USER - [0:0] ... ... *nat :PREROUTING ACCEPT [451:184498] :INPUT ACCEPT [13:1070] :OUTPUT ACCEPT [6508:559391] :POSTROUTING ACCEPT [6510:559535] :DOCKER - [0:0] Here *filter and *nat are table names and the list of chains that it has (both built-in and custom chains) are shown below with their default policies. Docker has created DOCKER, DOCKER-USER, DOCKER-ISOLATION-STAGE-1 and DOCKER-ISOLATION-STAGE-2 custom chains.\nThe following are the rules that provide isolation,so that we cant talk from one bridge network to another.\n-A FORWARD -j DOCKER-ISOLATION-STAGE-1 ... -A DOCKER-ISOLATION-STAGE-1 -i br-44a58be29ddf ! -o br-44a58be29ddf -j DOCKER-ISOLATION-STAGE-2 -A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2 -A DOCKER-ISOLATION-STAGE-1 -j RETURN -A DOCKER-ISOLATION-STAGE-2 -o br-44a58be29ddf -j DROP -A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP -A DOCKER-ISOLATION-STAGE-2 -j RETURN ... Here docker0 represents the default bridge created by docker and bridge interface name on the vm for demo-net is br-44a58be29ddf\nin FORWARD chain of filter table, the first rule says jump (-j) to DOCKER-ISOLATION-STAGE-1 chain. In DOCKER-ISOLATION-STAGE-1 we check if the packet originates from a bridge interface and is not to the same bridge interface,if so, we pass the control to DOCKER-ISOLATION-STAGE-2 where the packet gets dropped.\nNetwork Address translation to expose container service The following are the rules that will send out the packets originating from bridge to outside world using Network address translation(MASQUERADE is a special form of Source NATing in which the NAT host, vm in our case, modifies the sender address to that of itself before sending the packet out),so containers can reach outside world.\n-A POSTROUTING -s 172.18.0.0/16 ! -o br-44a58be29ddf -j MASQUERADE -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE Here if the packet originates from the bridge ip range, but is not destined for the bridge network itself, then MASQUERADE (NAT the request)\nAnd finally, anyone from outside world can reach the service running in a container because of the following rule.\n*nat ... -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER ... -A DOCKER ! -i br-44a58be29ddf -p tcp -m tcp --dport 8080 -j DNAT --to-destination 172.18.0.2:80 so when the traffic is not from within bridge network and is for the published port, then do the destination NATing to modify the destination address to that of the container.\nThats it for now folks.\n",
+  "wordCount" : "1572",
+  "inLanguage": "en",
+  "datePublished": "2023-01-10T00:00:00Z",
+  "dateModified": "2023-01-10T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Clement Thomas"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://localhost:1313/tech/docker-bridge-network-iptables/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Clem",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://localhost:1313/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Clem (Alt + H)">Clem</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tech" title="Tech">
+                    <span>Tech</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/personal-finance" title="Personal Finance">
+                    <span>Personal Finance</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Docker Bridge Networks and iptables
+    </h1>
+    <div class="post-meta"><span title='2023-01-10 00:00:00 +0000 UTC'>January 10, 2023</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;1572 words&nbsp;·&nbsp;Clement Thomas
+
+</div>
+  </header> 
+  <div class="post-content"><p>Docker provides support for multiple network drivers. The default network driver being <em><strong>bridge</strong></em> network. Docker creates <em><strong>docker0</strong></em> bridge and connects all the docker containers created in the host to it, unless we specify a different network with <em><strong>&ndash;network</strong></em> option.</p>
+<p>Docker&rsquo;s bridge network <a
+
+  
+  
+    href = "https://docs.docker.com/network/bridge/"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    documentation
+  </span>
+
+</a>
+ recommends user-defined bridge over using the default docker created bridge, some of the advantages of user-defined bridges are:</p>
+<ul>
+<li>
+<p>user-defined bridges provide automatic dns resolution. Containers can resolve each other by using the name or alias. In default docker bridge, we should use <em><strong>&ndash;link</strong></em> option to achieve this functionality, which is deprecated already.</p>
+</li>
+<li>
+<p>user-defined bridges provide better isolation since only the containers connected to the same bridge network can communicate with each other. Docker adds iptables rules to prevent communication between bridges.</p>
+</li>
+</ul>
+<p>Docker&rsquo;s bridge network <a
+
+  
+  
+    href = "https://docs.docker.com/network/bridge/"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    documentation
+  </span>
+
+</a>
+ provides few more advantages of using user-defined bridges. But in this article,we will see</p>
+<ol>
+<li>how dns resolution happens and works for resolving containers and other dns names.</li>
+<li>how is network isolation provided?</li>
+<li>how are we able to access the service(s) running in a container,by exposing it on a port.</li>
+</ol>
+<h3 id="demo-setup">Demo setup<a hidden class="anchor" aria-hidden="true" href="#demo-setup">#</a></h3>
+<p>The below tests are done on ubuntu 20.04 vm running Docker engine version 20.10.17</p>
+<p>Let us create a user-defined bridge network called <em><strong>demo-net</strong></em> and create an nginx container named <em><strong>web</strong></em> and alphine container named <em><strong>cli</strong></em>, both attached to demo-net. Our linux vm has an ethernet connection <em><strong>eth0</strong></em> with ip <em><strong>10.44.54.64</strong></em> and the dns server configured in /etc/resolv.conf is <em><strong>10.40.50.60</strong></em></p>
+<p><img alt="Setup" loading="lazy" src="/img/tech/docker-bridge/docker-bridge-network.png"></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">docker network create --driver bridge demo-net
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">docker run -d --network demo-net -p 0.0.0.0:8080:80 --name web nginx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">docker run -dit --network demo-net --name cli alpine ash</span></span></code></pre></div>
+<p>When inspecting the demo-net bridge network, we can see both web and cli containers attached to it. Also to access our web container from outside,we are using <em><strong>-p 0.0.0.0:8080:80</strong></em> so anyone can reach the web container by connecting to port 8080 on the vm.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="err">docker</span> <span class="err">network</span> <span class="err">create</span> <span class="err">--driver</span> <span class="err">bridge</span> <span class="err">demo-net</span>
+</span></span><span class="line"><span class="cl"><span class="err">docker</span> <span class="err">network</span> <span class="err">inspect</span> <span class="err">demo-net</span>
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;Containers&#34;</span><span class="err">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;303c085ffb99ab2d429a4f0b58138ba4f9a2560f133343c769b5593a1192c50c&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;Name&#34;</span><span class="p">:</span> <span class="s2">&#34;cli&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;EndpointID&#34;</span><span class="p">:</span> <span class="s2">&#34;afad3f78d70a3c571d88dfed716564297b3903d6726e92dd5a2087519f1f5d0f&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;MacAddress&#34;</span><span class="p">:</span> <span class="s2">&#34;02:42:ac:12:00:03&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;IPv4Address&#34;</span><span class="p">:</span> <span class="s2">&#34;172.18.0.3/16&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;IPv6Address&#34;</span><span class="p">:</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;aea6a91131135c9f0de56686ea5fa465524f13d6e325415858ba653786166a93&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;Name&#34;</span><span class="p">:</span> <span class="s2">&#34;web&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;EndpointID&#34;</span><span class="p">:</span> <span class="s2">&#34;4efde27f5d0529776ec9c20515b2bb00dddd0f0c4d0f3ac739b89dca6efcc755&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;MacAddress&#34;</span><span class="p">:</span> <span class="s2">&#34;02:42:ac:12:00:02&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;IPv4Address&#34;</span><span class="p">:</span> <span class="s2">&#34;172.18.0.2/16&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;IPv6Address&#34;</span><span class="p">:</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span></span></span></code></pre></div>
+<h3 id="dns-resolution">DNS resolution<a hidden class="anchor" aria-hidden="true" href="#dns-resolution">#</a></h3>
+<p>From the cli container, lets try to ping web and google.com</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">docker container attach cli
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">/ <span class="c1"># ping -c 3 web</span>
+</span></span><span class="line"><span class="cl">PING web <span class="o">(</span>172.18.0.2<span class="o">)</span>: <span class="m">56</span> data bytes
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 172.18.0.2: <span class="nv">seq</span><span class="o">=</span><span class="m">0</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">64</span> <span class="nv">time</span><span class="o">=</span>0.215 ms
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 172.18.0.2: <span class="nv">seq</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">64</span> <span class="nv">time</span><span class="o">=</span>0.110 ms
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 172.18.0.2: <span class="nv">seq</span><span class="o">=</span><span class="m">2</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">64</span> <span class="nv">time</span><span class="o">=</span>0.160 ms
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">--- web ping statistics ---
+</span></span><span class="line"><span class="cl"><span class="m">3</span> packets transmitted, <span class="m">3</span> packets received, 0% packet loss
+</span></span><span class="line"><span class="cl">round-trip min/avg/max <span class="o">=</span> 0.110/0.161/0.215 ms
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">/ <span class="c1"># ping -c 3 google.com</span>
+</span></span><span class="line"><span class="cl">PING google.com <span class="o">(</span>142.250.194.142<span class="o">)</span>: <span class="m">56</span> data bytes
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 142.250.194.142: <span class="nv">seq</span><span class="o">=</span><span class="m">0</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">115</span> <span class="nv">time</span><span class="o">=</span>3.610 ms
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 142.250.194.142: <span class="nv">seq</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">115</span> <span class="nv">time</span><span class="o">=</span>3.749 ms
+</span></span><span class="line"><span class="cl"><span class="m">64</span> bytes from 142.250.194.142: <span class="nv">seq</span><span class="o">=</span><span class="m">2</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">115</span> <span class="nv">time</span><span class="o">=</span>3.804 ms
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">--- google.com ping statistics ---
+</span></span><span class="line"><span class="cl"><span class="m">3</span> packets transmitted, <span class="m">3</span> packets received, 0% packet loss
+</span></span><span class="line"><span class="cl">round-trip min/avg/max <span class="o">=</span> 3.610/3.721/3.804 ms</span></span></code></pre></div>
+<p>while in another terminal running a tcpdump to inspect dns traffic.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo tcpdump -i any -nn udp and port <span class="m">53</span>
+</span></span><span class="line"><span class="cl"><span class="o">[</span>sudo<span class="o">]</span> password <span class="k">for</span> user:
+</span></span><span class="line"><span class="cl">tcpdump: verbose output suppressed, use -v or -vv <span class="k">for</span> full protocol decode
+</span></span><span class="line"><span class="cl">listening on any, link-type LINUX_SLL <span class="o">(</span>Linux cooked v1<span class="o">)</span>, capture size <span class="m">262144</span> bytes
+</span></span><span class="line"><span class="cl">08:45:43.502942 IP 172.18.0.3.51782 &gt; 10.40.50.60.53: 9599+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.502942 IP 172.18.0.3.51782 &gt; 10.40.50.60.53: 9599+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.502985 IP 172.18.0.3.42132 &gt; 10.40.50.60.53: 9912+ AAAA? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503012 IP 10.44.54.64.51782 &gt; 10.40.50.60.53: 9599+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.502985 IP 172.18.0.3.42132 &gt; 10.40.50.60.53: 9912+ AAAA? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503039 IP 10.44.54.64.42132 &gt; 10.40.50.60.53: 9912+ AAAA? google.com. <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503288 IP 10.40.50.60.53 &gt; 10.44.54.64.51782: <span class="m">9599</span> 1/0/0 A 142.250.194.142 <span class="o">(</span>44<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503301 IP 10.40.50.60.53 &gt; 172.18.0.3.51782: <span class="m">9599</span> 1/0/0 A 142.250.194.142 <span class="o">(</span>44<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503308 IP 10.40.50.60.53 &gt; 172.18.0.3.51782: <span class="m">9599</span> 1/0/0 A 142.250.194.142 <span class="o">(</span>44<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503328 IP 10.40.50.60.53 &gt; 10.44.54.64.42132: <span class="m">9912</span> 0/0/0 <span class="o">(</span>28<span class="o">)</span>
+</span></span><span class="line"><span class="cl">08:45:43.503332 IP 10.40.50.60.53 &gt; 172.18.0.3.42132: <span class="m">9912</span> 0/0/0 <span class="o">(</span>28<span class="o">)</span></span></span></code></pre></div>
+<p>Here there is no dns request, sent for web but our container still resolved the correct ip for the web container. But for google.com we can see tcpdump showing the actual dns query being made by the cli container.</p>
+<p>The DNS resolution for container names or aliases is handled by the <em><strong>Docker&rsquo;s embedded DNS server</strong></em> and so no actual dns call is made and hence there is no output in terminal running tcpdump. More on this in <a
+
+  
+  
+    href = "https://docs.docker.com/config/containers/container-networking/"
+
+    
+
+  
+
+  
+
+    target = "_blank"
+    rel = "nofollow noopener noreferrer"
+
+    >
+  
+  <span>
+    here
+  </span>
+
+</a>
+</p>
+<p>Though the cli container makes the dns request, we can see the same request is sent out through our eth0 interface (also bridge network is not an actual network visible outside our linux host).</p>
+<h3 id="network-isolation">Network isolation<a hidden class="anchor" aria-hidden="true" href="#network-isolation">#</a></h3>
+<p>The dns resolution done above, network isolation and also the exposing of the container service in a port on the host vm are all achieved through <em><strong>iptables</strong></em> rules.</p>
+<p>Let us inspect the iptables rules in the vm. Though <em><strong>iptables -nL</strong></em> gives the rules, the output of <em><strong>iptables-save</strong></em> is bit more easier to understand and so we will use the latter.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">root@linux-vm:~# iptables-save
+</span></span><span class="line"><span class="cl"><span class="c1"># Generated by iptables-save v1.8.4 on Wed Jan  4 09:07:50 2023</span>
+</span></span><span class="line"><span class="cl">*filter
+</span></span><span class="line"><span class="cl">:INPUT ACCEPT <span class="o">[</span>1023555:889414063<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:FORWARD DROP <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:OUTPUT ACCEPT <span class="o">[</span>506329:266904587<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-ISOLATION-STAGE-1 - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-ISOLATION-STAGE-2 - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-USER - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">-A FORWARD -j DOCKER-USER
+</span></span><span class="line"><span class="cl">-A FORWARD -j DOCKER-ISOLATION-STAGE-1
+</span></span><span class="line"><span class="cl">-A FORWARD -o br-44a58be29ddf -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</span></span><span class="line"><span class="cl">-A FORWARD -o br-44a58be29ddf -j DOCKER
+</span></span><span class="line"><span class="cl">-A FORWARD -i br-44a58be29ddf ! -o br-44a58be29ddf -j ACCEPT
+</span></span><span class="line"><span class="cl">-A FORWARD -i br-44a58be29ddf -o br-44a58be29ddf -j ACCEPT
+</span></span><span class="line"><span class="cl">-A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+</span></span><span class="line"><span class="cl">-A FORWARD -o docker0 -j DOCKER
+</span></span><span class="line"><span class="cl">-A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+</span></span><span class="line"><span class="cl">-A FORWARD -i docker0 -o docker0 -j ACCEPT
+</span></span><span class="line"><span class="cl">-A DOCKER -d 172.18.0.2/32 ! -i br-44a58be29ddf -o br-44a58be29ddf -p tcp -m tcp --dport <span class="m">80</span> -j ACCEPT
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -i br-44a58be29ddf ! -o br-44a58be29ddf -j DOCKER-ISOLATION-STAGE-2
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -j RETURN
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -o br-44a58be29ddf -j DROP
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -j RETURN
+</span></span><span class="line"><span class="cl">-A DOCKER-USER -j RETURN
+</span></span><span class="line"><span class="cl">COMMIT
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">*nat
+</span></span><span class="line"><span class="cl">:PREROUTING ACCEPT <span class="o">[</span>451:184498<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:INPUT ACCEPT <span class="o">[</span>13:1070<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:OUTPUT ACCEPT <span class="o">[</span>6508:559391<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:POSTROUTING ACCEPT <span class="o">[</span>6510:559535<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+</span></span><span class="line"><span class="cl">-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+</span></span><span class="line"><span class="cl">-A POSTROUTING -s 172.18.0.0/16 ! -o br-44a58be29ddf -j MASQUERADE
+</span></span><span class="line"><span class="cl">-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+</span></span><span class="line"><span class="cl">-A POSTROUTING -s 172.18.0.2/32 -d 172.18.0.2/32 -p tcp -m tcp --dport <span class="m">80</span> -j MASQUERADE
+</span></span><span class="line"><span class="cl">-A DOCKER -i br-44a58be29ddf -j RETURN
+</span></span><span class="line"><span class="cl">-A DOCKER -i docker0 -j RETURN
+</span></span><span class="line"><span class="cl">-A DOCKER ! -i br-44a58be29ddf -p tcp -m tcp --dport <span class="m">8080</span> -j DNAT --to-destination 172.18.0.2:80
+</span></span><span class="line"><span class="cl">COMMIT</span></span></code></pre></div>
+<p>Thats a lot of rules, Lets take few rules at a time to understand. But before a quick summary about iptables.</p>
+<p>iptables is the command used to configure the linux kernel&rsquo;s packet filtering subsystem.</p>
+<ul>
+<li>iptables comes with three built-in tables <em><strong>filter,mangle and nat</strong></em>. and if we dont specify
+any table in the command, <em><strong>filter</strong></em> is the default.</li>
+<li>Each table has one or more <em><strong>built-in chains(INPUT,OUTPUT,PREROUTING,POSTROUTING,FORWARD)</strong></em> which in turn has rules which determine what to do with a packet. ie. ACCEPT, DROP etc.</li>
+<li>In addition to pre-configured chains, we can also create custom chains and use it. The following are the tables and their built-in chains. Also each chain has the default policy, ie. what to do when none of the rules match it.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">*filter
+</span></span><span class="line"><span class="cl">:INPUT ACCEPT <span class="o">[</span>1023555:889414063<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:FORWARD DROP <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:OUTPUT ACCEPT <span class="o">[</span>506329:266904587<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-ISOLATION-STAGE-1 - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-ISOLATION-STAGE-2 - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER-USER - <span class="o">[</span>0:0<span class="o">]</span>
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">*nat
+</span></span><span class="line"><span class="cl">:PREROUTING ACCEPT <span class="o">[</span>451:184498<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:INPUT ACCEPT <span class="o">[</span>13:1070<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:OUTPUT ACCEPT <span class="o">[</span>6508:559391<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:POSTROUTING ACCEPT <span class="o">[</span>6510:559535<span class="o">]</span>
+</span></span><span class="line"><span class="cl">:DOCKER - <span class="o">[</span>0:0<span class="o">]</span></span></span></code></pre></div>
+<p>Here <em><strong>*filter</strong></em> and <em><strong>*nat</strong></em> are table names and the list of chains that it has (both built-in and custom chains) are shown below with their default policies. Docker has created <em><strong>DOCKER</strong></em>, <em><strong>DOCKER-USER</strong></em>, <em><strong>DOCKER-ISOLATION-STAGE-1</strong></em> and <em><strong>DOCKER-ISOLATION-STAGE-2</strong></em> custom chains.</p>
+<p>The following are the rules that provide isolation,so that we cant talk from one bridge network to another.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">-A FORWARD -j DOCKER-ISOLATION-STAGE-1
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -i br-44a58be29ddf ! -o br-44a58be29ddf -j DOCKER-ISOLATION-STAGE-2
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-1 -j RETURN
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -o br-44a58be29ddf -j DROP
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+</span></span><span class="line"><span class="cl">-A DOCKER-ISOLATION-STAGE-2 -j RETURN
+</span></span><span class="line"><span class="cl">...</span></span></code></pre></div>
+<p>Here <em><strong>docker0</strong></em> represents the default bridge created by docker and bridge interface name on the vm for demo-net is <em><strong>br-44a58be29ddf</strong></em></p>
+<p>in <em><strong>FORWARD</strong></em> chain of filter table, the first rule says jump (-j) to <em><strong>DOCKER-ISOLATION-STAGE-1</strong></em> chain. In <em><strong>DOCKER-ISOLATION-STAGE-1</strong></em> we check if the packet originates from
+a bridge interface and is not to the same bridge interface,if so, we pass the control to <em><strong>DOCKER-ISOLATION-STAGE-2</strong></em> where the packet gets dropped.</p>
+<h3 id="network-address-translation-to-expose-container-service">Network Address translation to expose container service<a hidden class="anchor" aria-hidden="true" href="#network-address-translation-to-expose-container-service">#</a></h3>
+<p>The following are the rules that will send out the packets originating from bridge to outside world using <em><strong>Network address translation</strong></em>(MASQUERADE is a special form of Source NATing in which the NAT host, vm in our case, modifies the sender address to that of itself before sending the packet out),so containers can reach outside world.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">-A POSTROUTING -s 172.18.0.0/16 ! -o br-44a58be29ddf -j MASQUERADE
+</span></span><span class="line"><span class="cl">-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE</span></span></code></pre></div>
+<p>Here if the packet originates from the bridge ip range, but is not destined for the bridge network itself, then MASQUERADE (NAT the request)</p>
+<p>And finally, anyone from outside world can reach the service running in a container because of the following rule.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">*nat
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">-A DOCKER ! -i br-44a58be29ddf -p tcp -m tcp --dport <span class="m">8080</span> -j DNAT --to-destination 172.18.0.2:80</span></span></code></pre></div>
+<p>so when the traffic is not from within bridge network and is for the published port, then do the destination NATing to modify the destination address to that of the container.</p>
+<p>Thats it for now folks.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/docker/">Docker</a></li>
+      <li><a href="http://localhost:1313/tags/iptables/">Iptables</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/tech/ubuntu-repository/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>How Ubuntu repository works</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on x"
+            href="https://x.com/intent/tweet/?text=Docker%20Bridge%20Networks%20and%20iptables&amp;url=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f&amp;hashtags=docker%2ciptables">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f&amp;title=Docker%20Bridge%20Networks%20and%20iptables&amp;summary=Docker%20Bridge%20Networks%20and%20iptables&amp;source=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f&title=Docker%20Bridge%20Networks%20and%20iptables">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on whatsapp"
+            href="https://api.whatsapp.com/send?text=Docker%20Bridge%20Networks%20and%20iptables%20-%20http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on telegram"
+            href="https://telegram.me/share/url?text=Docker%20Bridge%20Networks%20and%20iptables&amp;url=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Docker Bridge Networks and iptables on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Docker%20Bridge%20Networks%20and%20iptables&u=http%3a%2f%2flocalhost%3a1313%2ftech%2fdocker-bridge-network-iptables%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+	<div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "clement89" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2024 <a href="http://localhost:1313/">Clem</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

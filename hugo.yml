@@ -1,6 +1,7 @@
 baseURL: 'https://web.loopback.in/'
 theme: 'PaperMod'
-paginate: 5
+pagination:
+  pagerSize: 5
 languageCode: 'en-us'
 title: Clem
 enableRobotsTXT: true

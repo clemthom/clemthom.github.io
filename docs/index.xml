@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Clem</title>
     <link>https://web.loopback.in/</link>
     <description>Recent content on Clem</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo -- 0.140.0</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 09 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 22 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://web.loopback.in/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Git submodules</title>
+      <link>https://web.loopback.in/tech/git-submodules/</link>
+      <pubDate>Sun, 22 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://web.loopback.in/tech/git-submodules/</guid>
+      <description>Working with git submodules</description>
+    </item>
     <item>
       <title>Things to know when dealing with land in Tamil nadu</title>
       <link>https://web.loopback.in/personal-finance/land/</link>
@@ -90,9 +97,103 @@
       <link>https://web.loopback.in/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://web.loopback.in/about/</guid>
-      <description>Hi, I am Clement (may not be a familiar name, it&amp;rsquo;s a dictionary word though, means merciful), from Bangalore, India. I am a Site Reliability Engineer by profession. This is my personal space to write about things i learn or interested in. I hope the content in here is useful.
-I listen to podcasts during workouts and whenever am free and the following are my regular podcasts
-Why not mint money The school of greatness Quote of the day show Feel better live more Some topics of my interest are anything SRE stuff, Time management, Personal development, Mindfulness, Fitness, workouts, Personal finance and investing.</description>
+      <description>&lt;p&gt;Hi, I am Clement (may not be a familiar name, it&amp;rsquo;s a dictionary word though, means &lt;strong&gt;merciful&lt;/strong&gt;), from Bangalore, India. I am a &lt;strong&gt;Site Reliability Engineer&lt;/strong&gt; by profession. This is my personal space to write about things i learn or interested in. I hope the content in here is useful.&lt;/p&gt;
+&lt;p&gt;I listen to podcasts during workouts and whenever am free and the following are my regular podcasts&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a
+
+  
+  
+    href = &#34;https://www.livemint.com/podcast/why-not-mint-money-1402&#34;
+
+    
+
+  
+
+  
+
+    target = &#34;_blank&#34;
+    rel = &#34;nofollow noopener noreferrer&#34;
+
+    &gt;
+  
+  &lt;span&gt;
+    Why not mint money
+  &lt;/span&gt;
+
+&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a
+
+  
+  
+    href = &#34;https://lewishowes.com/sogpodcast/&#34;
+
+    
+
+  
+
+  
+
+    target = &#34;_blank&#34;
+    rel = &#34;nofollow noopener noreferrer&#34;
+
+    &gt;
+  
+  &lt;span&gt;
+    The school of greatness
+  &lt;/span&gt;
+
+&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a
+
+  
+  
+    href = &#34;https://seancroxton.com/quoteoftheday/&#34;
+
+    
+
+  
+
+  
+
+    target = &#34;_blank&#34;
+    rel = &#34;nofollow noopener noreferrer&#34;
+
+    &gt;
+  
+  &lt;span&gt;
+    Quote of the day show
+  &lt;/span&gt;
+
+&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a
+
+  
+  
+    href = &#34;https://drchatterjee.com/blog/category/podcast/&#34;
+
+    
+
+  
+
+  
+
+    target = &#34;_blank&#34;
+    rel = &#34;nofollow noopener noreferrer&#34;
+
+    &gt;
+  
+  &lt;span&gt;
+    Feel better live more
+  &lt;/span&gt;
+
+&lt;/a&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Some topics of my interest are anything SRE stuff, Time management, Personal development, Mindfulness, Fitness, workouts, Personal finance and investing.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
