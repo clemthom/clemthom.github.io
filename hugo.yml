@@ -9,6 +9,12 @@ enableEmoji: true
 pygmentsUseClasses: true
 disqusShortname: 'clement89'
 pluralizeListTitles: false
+
+# Disable tag/category pages to avoid thin content issues with Google indexing
+# Tags will still display on posts but won't generate separate /tags/tagname/ pages
+disableKinds:
+  - taxonomy      # Disables /tags/ and /categories/ list pages
+  - term          # Disables individual /tags/tagname/ pages
 languages:
   en:
     menu:
